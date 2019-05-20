@@ -1,0 +1,12 @@
+.SearchContent {
+    font-size: 20px;
+    margin-bottom: 1em;
+    margin-top: 6em;
+    padding: 1em;
+}
+
+.SearchField {
+    display: 'block';
+    margin-top: 20em;
+    background-color: brown;
+}
