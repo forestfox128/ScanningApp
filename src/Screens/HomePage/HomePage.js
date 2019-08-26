@@ -17,6 +17,9 @@ import {
 import DeleteIcon from "@material-ui/icons/Delete";
 import IconButton from "@material-ui/core/IconButton";
 import { Link } from "react-router-dom";
+import Tooltip from "../../Components/Tooltip/Tooltip"
+
+
 
 class HomePage extends Component {
   constructor(props) {
@@ -33,20 +36,21 @@ class HomePage extends Component {
       lastNameFilter: "",
       lastTypeFilter: 0,
       returnItemID: 0,
-      addButton: ""
+      addButton: "",
+      itemsList: ""
     };
   }
 
-  async filterTableContent() {
-    await getItemsList().then(res => {
-      var filteredRes = res;
+  filterTableContent() {
+    
+      var filteredRes = this.state.itemsList;
       if (
         this.state.lastTypeFilter !== undefined &&
         this.state.lastTypeFilter !== "0" &&
         this.state.lastTypeFilter !== 0
       ) {
         filteredRes = this.filterByTypeNameContains(
-          res,
+          filteredRes,
           this.state.lastTypeFilter
         );
       }
@@ -57,7 +61,6 @@ class HomePage extends Component {
         );
       }
       this.createTable(filteredRes);
-    });
   }
 
   filterByTypeNameContains = (res, lastTypeFilter) => {
@@ -82,26 +85,27 @@ class HomePage extends Component {
       });
   };
 
-  // componentWillMount() {
-  //   this.getName();
-  // }
-
   async componentDidMount() {
-    this.updateDimensions();
     await getItemTypesList().then(res => {
       res.unshift({id: "0",type_name:"-"})
       this.setState({ typesList: res });
     });
     if (this.state.isLoading === true) this.getName();
     await getItemsList().then(res => {
-      this.setState({ isLoading: false });
+      this.setState({ 
+        isLoading: false,
+        itemsList: res
+      });
       this.createTable(res);
     });
-    
-    window.addEventListener("resize", this.updateDimensions.bind(this));
+    this.updateDimensions()
+    window.addEventListener("resize", this.updateDimensions);
+  }
+  componentWillUnmount(){
+    window.removeEventListener("resize", this.updateDimensions);
   }
 
-  updateDimensions() {
+  updateDimensions = () => {
     var addBtn = ''
     if(window.innerWidth < 1400) {
       addBtn = <div className="AddButtonPosition">
@@ -109,16 +113,21 @@ class HomePage extends Component {
     </div>
     
     } else {
-      addBtn = <div className="AddButtonPosition">
-      <Button text={"Dodaj"} link={"/adds"} />
-    </div>
+      addBtn = <Tooltip title="Kliknij, aby dodać nowy przedmiot">
+        <div className="AddButtonPosition">
+          <Button text={"Dodaj"} link={"/adds"} />
+        </div>
+      </Tooltip>
     }
     this.setState({addButton: addBtn});
   }
 
   updateData = async () => {
     await getItemsList().then(res => {
-      this.setState({ isLoading: false });
+      this.setState({ 
+        isLoading: false,
+        itemsList: res
+      });
       this.createTable(res);
     });
     this.forceUpdate();
@@ -163,18 +172,22 @@ class HomePage extends Component {
       ID: id
     };
     return (
-      <Link to={newTo}>
-        <IconButton aria-label="Approve" onClick={() => console.log(id)}>
-          <Icon>edit</Icon>{" "}
-        </IconButton>
-      </Link>
+      <Tooltip title="Kliknij, aby rozpocząć edycję przedmiotu">
+        <Link to={newTo}>
+          <IconButton aria-label="Approve" onClick={() => console.log(id)}>
+            <Icon>arrow_forward</Icon>{" "}
+          </IconButton>
+        </Link>
+      </Tooltip>
     );
   }
   createButtonRemove(id) {
     return (
-      <IconButton aria-label="Delete" onClick={() => this.handleDialogOpen(id)}>
-        <DeleteIcon />
-      </IconButton>
+      <Tooltip title="Kliknij, aby usunąć przedmiot">
+        <IconButton aria-label="Delete" onClick={() => this.handleDialogOpen(id)}>
+          <DeleteIcon />
+        </IconButton>
+      </Tooltip>
     );
   }
 
@@ -184,7 +197,7 @@ class HomePage extends Component {
         aria-label="Delete"
         onClick={() => this.handleReturnDialogOpen(id)}
       >
-        <Icon> close</Icon>{" "}
+        <Tooltip title="Przedmiot niedostępny. Kliknij, aby zwrócić"><Icon>close</Icon></Tooltip>{" "}
       </IconButton>
     );
   }
@@ -197,7 +210,7 @@ class HomePage extends Component {
       ID = res[i].id;
       var available = this.createButtonReturn(ID);
       if (res[i].available === true) {
-        available = <Icon>done</Icon>;
+        available = <Tooltip title="Przedmiot dostępny"><Icon>done</Icon></Tooltip>;
       }
       ID = res[i].id;
       rows.push([
@@ -229,11 +242,9 @@ class HomePage extends Component {
 
   handleChange = (fieldToFilterOn, value) => {
     if (fieldToFilterOn === "name") 
-      this.setState({ lastNameFilter: value });
+      this.setState({ lastNameFilter: value }, () => this.filterTableContent());
     else 
-      this.setState({ lastTypeFilter: value });
-
-    this.filterTableContent();
+      this.setState({ lastTypeFilter: value }, () => this.filterTableContent());
   };
 
   handleKeyDown = e => {

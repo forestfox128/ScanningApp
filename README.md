@@ -1,12 +1,9 @@
 # Scanning App - frontend
 
-The app was created to improve music warehouse managment and rent. This app is administrator part of renting music equipment system.
+The project is created with [Create React App](https://github.com/facebook/create-react-app)
 
-## Libraries
-React.js
-Material
-Axios
+## Run development server
+You need npm or yarn to run the application. Run `npm install` to install all dependencies. Then run `npm start` to start development server. The app will be availble at `http://localhost:3000/login`.
 
-![alt image1](./screenshots/img1.png)
-![alt image2](./screenshots/img2.png)
-![alt image3](./screenshots/img3.png)
+## Build Docker Compose
+Comming soon...
